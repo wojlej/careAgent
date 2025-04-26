@@ -1,0 +1,46 @@
+{
+  "medications": [
+    {
+      "name": "Paracetamol",
+      "dosage": "500 mg",
+      "frequency": "co 8 godzin",
+      "times": [
+        "07:00",
+        "15:00",
+        "23:00"
+      ]
+    },
+    {
+      "name": "Lisinopril",
+      "dosage": "10 mg",
+      "frequency": "raz dziennie",
+      "times": [
+        "08:00"
+      ]
+    },
+    {
+      "name": "Atorvastatin",
+      "dosage": "20 mg",
+      "frequency": "raz dziennie",
+      "times": [
+        "20:00"
+      ]
+    },
+    {
+      "name": "Metformin",
+      "dosage": "500 mg",
+      "frequency": "raz dziennie",
+      "times": [
+        "09:00"
+      ]
+    },
+    {
+      "name": "Aspirin",
+      "dosage": "75 mg",
+      "frequency": "raz dziennie",
+      "times": [
+        "07:15"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "daily_routine": [
+    {
+      "time": "07:00",
+      "activity": "Pobudka i poranna toaleta"
+    },
+    {
+      "time": "07:15",
+      "activity": "Przyjęcie porannej dawki leków"
+    },
+    {
+      "time": "07:30",
+      "activity": "Śniadanie"
+    },
+    {
+      "time": "08:00",
+      "activity": "Krótki spacer po domu"
+    },
+    {
+      "time": "09:00",
+      "activity": "Zajęcia umysłowe (np. krzyżówka, czytanie)"
+    },
+    {
+      "time": "11:00",
+      "activity": "Przygotowanie i spożycie przekąski / drugiej dawki leków"
+    },
+    {
+      "time": "12:00",
+      "activity": "Obiad"
+    },
+    {
+      "time": "13:00",
+      "activity": "Czas wolny / drzemka"
+    },
+    {
+      "time": "15:00",
+      "activity": "Przyjęcie popołudniowej dawki leków"
+    },
+    {
+      "time": "15:30",
+      "activity": "Zajęcia rehabilitacyjne lub spacer"
+    },
+    {
+      "time": "17:00",
+      "activity": "Przekąska / lekka kolacja / czas z rodziną"
+    },
+    {
+      "time": "18:00",
+      "activity": "Wieczorne zajęcia relaksacyjne (muzyka, telewizja)"
+    },
+    {
+      "time": "19:00",
+      "activity": "Przyjęcie wieczornej dawki leków"
+    },
+    {
+      "time": "19:30",
+      "activity": "Kolacja"
+    },
+    {
+      "time": "20:00",
+      "activity": "Wieczorna toaleta"
+    },
+    {
+      "time": "20:30",
+      "activity": "Czas na lekturę lub relaks"
+    },
+    {
+      "time": "21:30",
+      "activity": "Przygotowanie do snu"
+    },
+    {
+      "time": "22:00",
+      "activity": "Położenie się spać"
+    }
+  ]
+}

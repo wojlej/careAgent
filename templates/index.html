@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Care Agent Assistant & Reminder</title>
+  <link rel="icon" href="https://img.recraft.ai/u1CRmGC7AHCu-tWJzh2mefM5qTGkqx-aX9FZlJC9Fho/rs:fit:1024:1024:0/q:95/g:no/plain/abs://prod/images/595908a1-c6ff-451c-aaec-6ca2c7a3fdc0@jpg" type="image/png">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
+  <style>
+    .loader {
+      border: 16px solid #f3f3f3;
+      border-top: 16px solid #3498db;
+      border-radius: 50%;
+      width: 120px;
+      height: 120px;
+      animation: spin 2s linear infinite;
+      display: none;
+      position: absolute;
+      position-area: center;
+      transform: translate(-50%, -50%);
+      opacity: 1;
+      z-index: 1000;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .card-body {
+      position: relative;
+    }
+
+    .conversations-overlay {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-light" style="user-select: none;">
+
+<div class="container py-5">
+  <h1 class="mb-4 text-center">
+    <img src="https://img.recraft.ai/u1CRmGC7AHCu-tWJzh2mefM5qTGkqx-aX9FZlJC9Fho/rs:fit:1024:1024:0/q:95/g:no/plain/abs://prod/images/595908a1-c6ff-451c-aaec-6ca2c7a3fdc0@jpg" alt="Logo" width="64" height="64" />
+    Care Agent Assistant & Reminder
+  </h1>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex">
+      <button id="recordToggle" class="btn btn-primary rounded me-2 px-4 py-2">Record</button>
+      <button id="reminders" class="btn btn-secondary rounded px-4 py-2">Upcoming event</button>
+    </div>
+    <button id="injectAnomaly" class="btn btn-warning rounded px-4 py-2">Add anomaly</button>
+  </div>
+
+  <div class="row">
+    <!-- Transcription (chat-style) -->
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm rounded" style="height: 400px; overflow-y: auto;">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Conversation</h5>
+        </div>
+        <div class="card-body d-flex flex-column gap-2" id="transcript" style="height: 100%; overflow-y: auto;">
+          <p class="text-muted mb-0">No conversation yet.</p>
+        </div>
+        <!-- Spinner loader, initially hidden -->
+        <div id="loader" class="loader"></div>
+      </div>
+    </div>
+
+    <!-- Next Event -->
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm rounded">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Next Event</h5>
+        </div>
+        <div class="card-body" id="event">
+          <p class="text-muted">No data.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event History -->
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm rounded">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Event History</h5>
+        </div>
+        <div class="card-body">
+          <ul id="event-history" style="overflow: auto; height: 255px; padding-left: 0; list-style: inside;">
+            <p class="text-muted">No previous events recorded.</p>
+          </ul>
+          <button id="clearHistory" class="btn btn-danger mt-3">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<script>
+  let recorder, chunks = [], isRecording = false, stream;
+
+  const recordBtn = document.getElementById('recordToggle');
+  const loader = document.getElementById('loader');
+  const transcriptContainer = document.getElementById('transcript');
+  const eventHistoryContainer = document.getElementById('event-history');
+
+  recordBtn.onclick = async () => {
+    if (!isRecording) {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(stream);
+      chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.start();
+      isRecording = true;
+      recordBtn.textContent = 'Stop';
+      recordBtn.classList.remove('btn-primary');
+      recordBtn.classList.add('btn-danger');
+      loader.style.display = 'block';  // Show loader when recording starts
+      // Add overlay dim effect only to Conversations section
+      addOverlay();
+
+      // Disable buttons
+      document.getElementById('reminders').disabled = true;
+      document.getElementById('injectAnomaly').disabled = true;
+    } else {
+      isRecording = false;
+      recordBtn.disabled = true;
+      recorder.stop();
+      stream.getTracks().forEach(track => track.stop());
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const resp = await fetch('/api/voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'audio/webm' },
+          body: await blob.arrayBuffer()
+        });
+        const data = await resp.json();
+
+        if (transcriptContainer.querySelector('p.text-muted')) {
+          transcriptContainer.innerHTML = ''; // Remove "No conversation yet." on first message
+        }
+
+        if (data.error) {
+          const errorBubble = document.createElement('div');
+          errorBubble.className = 'alert alert-danger';
+          errorBubble.textContent = 'Error: ' + data.error;
+          transcriptContainer.appendChild(errorBubble);
+        } else {
+          // Your message (right side)
+          const userBubble = document.createElement('div');
+          userBubble.className = 'align-self-end bg-primary text-white rounded p-2';
+          userBubble.style.maxWidth = '75%';
+          userBubble.textContent = data.input_transcript;
+          transcriptContainer.appendChild(userBubble);
+
+          // Agent response (left side)
+          const agentBubble = document.createElement('div');
+          agentBubble.className = 'align-self-start bg-light border rounded p-2';
+          agentBubble.style.maxWidth = '75%';
+          agentBubble.textContent = data.output_transcript;
+          transcriptContainer.appendChild(agentBubble);
+        }
+
+        transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+
+        recordBtn.textContent = 'Record';
+        recordBtn.classList.remove('btn-danger');
+        recordBtn.classList.add('btn-primary');
+        recordBtn.disabled = false;
+        loader.style.display = 'none';  // Hide loader after request is complete
+        // Remove overlay dim effect
+        removeOverlay();
+
+        // Enable buttons
+        document.getElementById('reminders').disabled = false;
+        document.getElementById('injectAnomaly').disabled = false;
+
+        // Fetch notifications after recording and data are processed
+        fetchNotifications();
+      };
+    }
+  };
+
+  // Function to add overlay dim effect to Conversations section only
+  function addOverlay() {
+    transcriptContainer.classList.add('conversations-overlay');
+  }
+
+  // Function to remove overlay dim effect
+  function removeOverlay() {
+    transcriptContainer.classList.remove('conversations-overlay');
+  }
+
+  document.getElementById('reminders').onclick = async () => {
+    const resp = await fetch('/api/reminders', { method: 'GET' });
+    const data = await resp.json();
+    const container = document.getElementById('event');
+    container.innerHTML = ''; // Clear previous
+
+    console.log(data);
+
+    if (!data) {
+      container.innerHTML = '<p class="text-muted">No upcoming events.</p>';
+      return;
+    }
+
+    const titleEl = document.createElement('p');
+    titleEl.innerHTML = `<strong>Title:</strong> ${data[0].summary}`;
+
+    const whenEl = document.createElement('p');
+    const date = new Date(data[0].start);
+    const formattedDate = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    whenEl.innerHTML = `<strong>Time:</strong> ${formattedDate}`;
+
+    const msgEl = document.createElement('p');
+    msgEl.innerHTML = `<strong>Message:</strong> ${data[0].message}`;
+
+    container.append(titleEl, whenEl, msgEl);
+
+    const ttsResp = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: data[0].message })
+    });
+  };
+
+  // Inject anomaly
+  document.getElementById('injectAnomaly').onclick = async () => {
+    try {
+      const resp = await fetch('/api/inject_anomaly', {
+        method: 'POST'
+      });
+      const result = await resp.json();
+      if (resp.ok) {
+        alert('Anomaly added: ' + JSON.stringify(result));
+      } else {
+        alert('Error adding anomaly: ' + result.error);
+      }
+    } catch (e) {
+      console.error('Inject anomaly error:', e);
+      alert('An error occurred while sending the request.');
+    }
+  };
+
+  // Function to fetch and display notifications in Event History
+  async function fetchNotifications() {
+    const resp = await fetch('/api/notifications');
+    const notifications = await resp.json();
+
+    // Usuwanie tekstu "No previous events recorded." jeśli istnieje
+    const noEventsParagraph = eventHistoryContainer.querySelector('p.text-muted');
+    if (noEventsParagraph) {
+      noEventsParagraph.remove();
+    }
+
+    // Jeśli nadal nic nie ma, a lista jest pusta
+    if (notifications.length === 0 && eventHistoryContainer.children.length === 0) {
+      const noEventsMessage = document.createElement('li');
+      noEventsMessage.classList.add('text-muted');
+      noEventsMessage.textContent = 'No events recorded.';
+      eventHistoryContainer.appendChild(noEventsMessage);
+      return;
+    }
+
+    // Dodawanie nowych eventów
+    notifications.forEach(notification => {
+      const listItem = document.createElement('li');
+      const timestamp = new Date(notification.timestamp);
+      const formattedTimestamp = `${String(timestamp.getDate()).padStart(2, '0')}-${String(timestamp.getMonth() + 1).padStart(2, '0')}-${timestamp.getFullYear()} ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
+
+      let icon = '';
+      if (notification.event === 'anomaly') {
+        icon = '❗';
+      } else if (notification.event === 'info') {
+        icon = 'ℹ️';
+      }
+
+      listItem.innerHTML = `${icon} ${notification.description} - <strong>${formattedTimestamp}</strong>`;
+      eventHistoryContainer.appendChild(listItem);
+    });
+  }
+
+  // Clear Event History
+  document.getElementById('clearHistory').onclick = () => {
+    const historyContainer = document.getElementById('event-history');
+    historyContainer.innerHTML = '<p class="text-muted">No previous events recorded.</p>';
+  };
+</script>
+
+</body>
+</html>

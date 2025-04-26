@@ -1,7 +1,7 @@
 # Care Agent Assistant
 
 <p align="center">
-  <img src="info.png" alt="screenshot" width="400"/>
+  <img src="info.png" alt="screenshot" width="800"/>
 </p>
 
 Care Agent Assistant is an intelligent application designed to support elderly and disabled individuals in their daily lives.  

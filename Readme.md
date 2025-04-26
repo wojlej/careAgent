@@ -1,6 +1,8 @@
 # Care Agent Assistant
 
-![screenshot](info.png)
+<p align="center">
+  <img src="info.png" alt="screenshot" width="400"/>
+</p>
 
 Care Agent Assistant is an intelligent application designed to support elderly and disabled individuals in their daily lives.  
 The system enables voice conversations with an assistant, reminds about events and medications, monitors health status based on data from wearable devices, and provides entertainment in the form of riddles and puzzles.

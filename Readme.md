@@ -48,12 +48,9 @@ It is required for properly processing audio recordings sent from the browser (c
 2. After the server starts, open your browser and navigate to:
     
     ```arduino
-    http://localhost:5000` ```
+    http://localhost:5000 ```
 
-3. If using Google Calendar data, you may need to log in to the test account via OAuth. Below are the login credentials:
-	```bash
-		login: sydney.parker.on.internet@gmail.com
-		pass: 123Sidly123```
+3. If using Google Calendar data, you may need to export `credential.json` file with API credentials
    
    
 ## Application Usage
